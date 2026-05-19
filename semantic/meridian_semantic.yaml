@@ -370,17 +370,28 @@ relationships:
         right_column: REP_ID
 
 custom_instructions: |
+  BUSINESS DEFINITIONS:
+  - Bookings = total deal value of all Closed Won deals in a period — actual signed revenue only, excludes pipeline.
+  - Attainment = closed_won / quota * 100 — what a rep has actually booked as % of target. Complete picture for Q1 (final). Misleading alone for Q2 (only 32 days in — use quota coverage instead).
+  - Quota coverage = (closed_won + active_pipeline) / quota * 100 — correct risk signal for Q2.
+  - Active pipeline = deals in Negotiation, Proposal, or Discovery stages only — excludes Closed Won and Closed Lost.
+  - Pace = closed won bookings by a specific day cutoff within a quarter — used to compare quarters at the same point in time.
+  - Day 32: Q1 day 32 = Feb 1 2026 (close_date <= '2026-02-01'). Q2 day 32 = May 2 2026 (close_date BETWEEN '2026-04-01' AND '2026-05-02').
+  - Behind Q1 pace = (Q2 day32 bookings / Q1 day32 bookings - 1) * 100. Negative value means Q2 is behind Q1 pace at the same point.
+
+  RISK CLASSIFICATION:
+  - HIGH RISK: quota coverage below 75%. Rep cannot hit quota even if all remaining pipeline converts — statistically unlikely at 100% conversion. Use CASE WHEN QUOTA_COVERAGE_PCT < 75 THEN 'HIGH'.
+  - MEDIUM RISK: quota coverage between 75% and 90%. Rep is behind but recovery is possible. Use CASE WHEN QUOTA_COVERAGE_PCT < 90 THEN 'MEDIUM'.
+  - LOW RISK: quota coverage 90% or above. Rep is on track. Use ELSE 'LOW'.
+  - Always classify risk using quota coverage — never attainment alone.
+
   CRITICAL BUSINESS RULES:
   - Q1 (Jan-Mar 2026) is FINAL — all numbers are actual results.
   - Q2 (Apr-Jun 2026) is IN PROGRESS as of May 2, 2026 — only 32 days into the quarter.
-  - For Q2 risk assessment, ALWAYS use quota coverage, not attainment alone.
-  - Quota coverage = (closed_won + active_pipeline) / quota * 100.
-  - Active pipeline stages are: Negotiation, Proposal, Discovery.
-  - At-risk threshold: quota coverage below 75%.
-  - Negotiation stage exists in Q2 but NOT in Q1.
+  - Q2 pipeline deals have EXPECTED close dates entered by reps — not actual closed revenue.
+  - Negotiation stage exists in Q2 but NOT in Q1 — its presence is a positive signal that deals are further along.
   - When asked about "this quarter" or "current quarter", use Q2 data.
-  - When asked about "quota" or "target" for Q2, always use QUOTA_Q2_2026.
-  - When comparing Q1 vs Q2 pace, Q1 day 32 = close_date <= '2026-02-01', Q2 day 32 = close_date between '2026-04-01' and '2026-05-02'.
+  - When asked about "quota" or "target" for Q2, always use QUOTA_Q2_2026 from Q2_REPS.
   - JOIN Q2_DEALS to Q2_REPS on REP_ID for Q2 questions. JOIN Q1_DEALS to Q1_REPS on REP_ID for Q1 questions.
   - For Q2 deals, always filter CLOSE_DATE >= '2026-04-01' to exclude deals from other quarters.
   - Round percentages to 1 decimal place.

@@ -1,0 +1,122 @@
+[
+  {
+    "id": "eval_01",
+    "question": "How is the Enterprise segment tracking against quota this quarter?",
+    "category": "business_rule",
+    "rationale": "Required query 1. Tests correct use of quota coverage over attainment for Q2. Enterprise has only $165K closed but $3.6M pipeline — 103% coverage tells a very different story than 4.5% attainment.",
+    "assertions": {
+      "expected_contains": ["165000", "165,000", "3650000", "3,650,000", "103"],
+      "must_not_contain": ["at risk", "behind", "concerning"],
+      "must_flag": "32 days",
+      "must_lead_with_coverage": true
+    }
+  },
+  {
+    "id": "eval_02",
+    "question": "Which reps are at risk of missing Q2?",
+    "category": "trust_rule",
+    "rationale": "Required query 2. Tricky: Lisa Park (71.5%) must be included — strategy doc missed her. Kevin Marsh (74.1%) is HIGH risk but barely under threshold. Tom Bradley (98.7%) and Marcus Rivera (132.4%) must NOT appear as at-risk despite Marcus having $0 closed.",
+    "assertions": {
+      "expected_contains": ["Priya Patel", "Danielle Torres", "Kevin Marsh", "Aisha Williams", "Lisa Park"],
+      "must_not_contain": ["Tom Bradley", "Marcus Rivera", "James Okafor", "Ryan Cole", "Sarah Chen at risk", "Sarah Chen high"],
+      "must_flag": "quota coverage",
+      "must_lead_with_coverage": false
+    }
+  },
+  {
+    "id": "eval_03",
+    "question": "How does Q2 attainment compare to where we were at the same point in Q1?",
+    "category": "business_rule",
+    "rationale": "Required query 3. Tests pace formula: (518K / 1260K - 1) * 100 = -58.9%. Must cite both day-32 numbers and flag Q2 is still in progress. Must not present this as a final verdict.",
+    "assertions": {
+      "expected_contains": ["518,000", "1,260,000", "behind"],
+      "must_not_contain": ["Q2 is failing", "Q2 will miss"],
+      "must_flag": "in progress",
+      "must_lead_with_coverage": false
+    }
+  },
+  {
+    "id": "eval_04",
+    "question": "Is Tom Bradley at risk of missing Q2?",
+    "category": "key_number",
+    "rationale": "Trap eval. Tom Bradley has $293K closed and $220K pipeline on a $520K quota — 98.7% coverage. The agent must say LOW risk and show the coverage number. Must never say at-risk or flag him negatively.",
+    "assertions": {
+      "expected_contains": ["293,000", "98", "low"],
+      "must_not_contain": ["at risk", "high risk", "medium risk", "behind"],
+      "must_flag": null,
+      "must_lead_with_coverage": false
+    }
+  },
+  {
+    "id": "eval_05",
+    "question": "Marcus Rivera has closed nothing this quarter. Should his manager be worried?",
+    "category": "trust_rule",
+    "rationale": "Trap eval testing attainment vs quota coverage. Marcus has $0 closed (0% attainment) but $1,125,000 pipeline against $850K quota — 132.4% coverage. Agent must lead with coverage, not attainment, and say LOW risk.",
+    "assertions": {
+      "expected_contains": ["1,125,000", "132", "low"],
+      "must_not_contain": ["at risk", "high risk", "concerning", "worried"],
+      "must_flag": "expected close dates",
+      "must_lead_with_coverage": true
+    }
+  },
+  {
+    "id": "eval_06",
+    "question": "What is the total Q2 quota across all reps?",
+    "category": "key_number",
+    "rationale": "Tricky number test. Correct answer is $6,200,000 — not $7,200,000 which appears in planning documents. Any answer citing 7.2M or 7,200,000 is a hallucination from context rather than a SQL result.",
+    "assertions": {
+      "expected_contains": ["6,200,000"],
+      "must_not_contain": ["7,200,000", "7.2M", "7.2 million"],
+      "must_flag": null,
+      "must_lead_with_coverage": false
+    }
+  },
+  {
+    "id": "eval_07",
+    "question": "What is Q2 quota attainment so far?",
+    "category": "trust_rule",
+    "rationale": "Attainment trap. Q2 attainment is only 8.4% ($518K / $6.2M). This number looks alarming. Agent must not lead with this — it must immediately pair it with quota coverage (73.8% overall) and flag that Q2 is 32 days in.",
+    "assertions": {
+      "expected_contains": ["8", "518,000"],
+      "must_not_contain": ["failing", "critical", "far behind quota"],
+      "must_flag": "32 days",
+      "must_lead_with_coverage": true
+    }
+  },
+  {
+    "id": "eval_08",
+    "question": "How is Kevin Marsh tracking against his Q2 quota?",
+    "category": "business_rule",
+    "rationale": "Near-threshold eval. Kevin Marsh has $0 closed and $400K pipeline against $540K quota — 74.1% coverage. This is HIGH risk but only 0.9 percentage points below the 75% threshold. Agent must say HIGH risk and show the exact coverage number.",
+    "assertions": {
+      "expected_contains": ["400,000", "74", "high"],
+      "must_not_contain": ["low risk", "on track", "medium risk"],
+      "must_flag": "75",
+      "must_lead_with_coverage": true
+    }
+  },
+  {
+    "id": "eval_09",
+    "question": "Is Q2 on track overall?",
+    "category": "trust_rule",
+    "rationale": "Open-ended eval testing holistic reasoning. Agent must not give a binary yes/no. Correct answer references: overall quota coverage (~73.8%), 5 HIGH risk reps, $5.2M active pipeline, Q2 only 32 days in, and Negotiation stage as positive signal.",
+    "assertions": {
+      "expected_contains": ["pipeline", "32 days", "coverage"],
+      "must_not_contain": ["yes, Q2 is on track", "no, Q2 is not on track"],
+      "must_flag": "expected close dates",
+      "must_lead_with_coverage": true
+    }
+  },
+  {
+    "id": "eval_10",
+    "question": "What does the presence of the Negotiation stage in Q2 tell us compared to Q1?",
+    "category": "business_rule",
+    "rationale": "Negotiation signal eval. Negotiation only exists in Q2 — not Q1. Agent must identify this as a POSITIVE signal: Q2 deals are further along in the sales process than Q1 pipeline was at the same point. Must not treat it as neutral or negative.",
+    "assertions": {
+      "expected_contains": ["negotiation", "Q1", "further"],
+      "must_not_contain": ["not significant", "no difference", "same"],
+      "must_flag": null,
+      "must_lead_with_coverage": false
+    }
+  }
+]
