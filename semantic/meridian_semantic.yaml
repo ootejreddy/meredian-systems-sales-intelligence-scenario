@@ -1,0 +1,430 @@
+name: Meridian Sales Intelligence
+description: >
+  Sales pipeline data for Meridian Systems.
+  Q1 (Jan-Mar 2026) is final — all numbers are actual.
+  Q2 (Apr-Jun 2026) is in progress as of May 2 2026 —
+  only 32 days into the quarter.
+  Q2 pipeline deals have EXPECTED close dates not actual.
+  Use pipeline coverage not attainment alone for Q2 risk.
+  Pipeline coverage = (closed won + active pipeline) / quota * 100.
+  At-risk threshold: pipeline coverage below 75 percent.
+
+tables:
+  - name: Q1_DEALS
+    base_table:
+      database: MERIDIAN_SALES
+      schema: GOLD
+      table: Q1_DEALS
+    description: Q1 2026 deals Jan to Mar. Final — all data is actual closed revenue.
+    dimensions:
+      - name: DEAL_ID
+        synonyms: ["deal id", "opportunity id"]
+        description: Unique deal identifier
+        expr: DEAL_ID
+        data_type: VARCHAR
+        unique: true
+      - name: ACCOUNT_NAME
+        synonyms: ["customer", "company", "client"]
+        description: Customer company name
+        expr: ACCOUNT_NAME
+        data_type: VARCHAR
+      - name: SEGMENT
+        synonyms: ["market segment", "customer segment"]
+        description: "Enterprise, Mid-Market, or SMB"
+        expr: SEGMENT
+        data_type: VARCHAR
+        is_enum: true
+        sample_values: ["Enterprise", "Mid-Market", "SMB"]
+      - name: REGION
+        synonyms: ["territory", "area"]
+        description: "West, Central, Northeast, Southeast"
+        expr: REGION
+        data_type: VARCHAR
+        is_enum: true
+        sample_values: ["West", "Central", "Northeast", "Southeast"]
+      - name: REP_ID
+        description: Sales rep ID — joins to Q1_REPS.REP_ID
+        expr: REP_ID
+        data_type: VARCHAR
+      - name: STAGE
+        synonyms: ["deal stage", "status"]
+        description: "Closed Won, Closed Lost, Proposal, Discovery, Prospecting"
+        expr: STAGE
+        data_type: VARCHAR
+        is_enum: true
+        sample_values: ["Closed Won", "Closed Lost", "Proposal", "Discovery", "Prospecting"]
+      - name: PRODUCT_LINE
+        synonyms: ["product", "offering"]
+        description: "Core Platform, Analytics Add-on, or Security Module"
+        expr: PRODUCT_LINE
+        data_type: VARCHAR
+        is_enum: true
+        sample_values: ["Core Platform", "Analytics Add-on", "Security Module"]
+      - name: LOSS_REASON
+        description: Populated for Closed Lost deals only — NULL otherwise
+        expr: LOSS_REASON
+        data_type: VARCHAR
+    time_dimensions:
+      - name: CLOSE_DATE
+        synonyms: ["close date", "closed date"]
+        description: Actual close date for the deal
+        expr: CLOSE_DATE
+        data_type: DATE
+      - name: CREATED_DATE
+        synonyms: ["created", "creation date"]
+        description: CRM created date
+        expr: CREATED_DATE
+        data_type: DATE
+    facts:
+      - name: DEAL_VALUE
+        synonyms: ["deal amount", "deal size", "value", "revenue", "bookings"]
+        description: Deal value in USD
+        expr: DEAL_VALUE
+        data_type: NUMBER
+    metrics:
+      - name: total_q1_bookings
+        synonyms: ["Q1 revenue", "Q1 closed won total"]
+        description: Total Q1 Closed Won deal value across all reps
+        expr: "SUM(CASE WHEN STAGE = 'Closed Won' THEN DEAL_VALUE ELSE 0 END)"
+      - name: q1_closed_by_day32
+        synonyms: ["Q1 pace", "Q1 day 32"]
+        description: Total Q1 Closed Won by day 32 (close_date <= 2026-02-01)
+        expr: "SUM(CASE WHEN STAGE = 'Closed Won' AND CLOSE_DATE <= '2026-02-01' THEN DEAL_VALUE ELSE 0 END)"
+      - name: q1_deal_count
+        description: Count of Q1 deals
+        expr: "COUNT(*)"
+    filters:
+      - name: q1_closed_won
+        synonyms: ["Q1 won deals", "Q1 bookings"]
+        description: Q1 Closed Won deals only
+        expr: "STAGE = 'Closed Won' AND CLOSE_DATE >= '2026-01-01' AND CLOSE_DATE <= '2026-03-31'"
+      - name: q1_pace_day32
+        description: Q1 Closed Won by day 32 (through Feb 1 2026)
+        expr: "STAGE = 'Closed Won' AND CLOSE_DATE <= '2026-02-01'"
+
+  - name: Q2_DEALS
+    base_table:
+      database: MERIDIAN_SALES
+      schema: GOLD
+      table: Q2_DEALS
+    description: >
+      Q2 2026 deals Apr to Jun. In progress as of May 2 2026.
+      Pipeline deals have EXPECTED close dates not actual.
+      Negotiation stage exists in Q2 but NOT in Q1.
+    dimensions:
+      - name: DEAL_ID
+        synonyms: ["deal id", "opportunity id"]
+        description: Unique deal identifier
+        expr: DEAL_ID
+        data_type: VARCHAR
+        unique: true
+      - name: ACCOUNT_NAME
+        synonyms: ["customer", "company", "client"]
+        description: Customer company name
+        expr: ACCOUNT_NAME
+        data_type: VARCHAR
+      - name: SEGMENT
+        synonyms: ["market segment", "customer segment"]
+        description: "Enterprise, Mid-Market, or SMB"
+        expr: SEGMENT
+        data_type: VARCHAR
+        is_enum: true
+        sample_values: ["Enterprise", "Mid-Market", "SMB"]
+      - name: REGION
+        synonyms: ["territory", "area"]
+        description: "West, Central, Northeast, Southeast"
+        expr: REGION
+        data_type: VARCHAR
+        is_enum: true
+        sample_values: ["West", "Central", "Northeast", "Southeast"]
+      - name: REP_ID
+        description: Sales rep ID — joins to Q2_REPS.REP_ID
+        expr: REP_ID
+        data_type: VARCHAR
+      - name: STAGE
+        synonyms: ["deal stage", "status", "pipeline stage"]
+        description: >
+          Closed Won or Closed Lost = actual result.
+          Negotiation = advanced pipeline high probability.
+          Proposal = mid stage pipeline.
+          Discovery = early stage pipeline.
+        expr: STAGE
+        data_type: VARCHAR
+        is_enum: true
+        sample_values: ["Closed Won", "Closed Lost", "Negotiation", "Proposal", "Discovery"]
+      - name: PRODUCT_LINE
+        synonyms: ["product", "offering"]
+        description: "Core Platform, Analytics Add-on, or Security Module"
+        expr: PRODUCT_LINE
+        data_type: VARCHAR
+        is_enum: true
+        sample_values: ["Core Platform", "Analytics Add-on", "Security Module"]
+      - name: LOSS_REASON
+        description: Populated for Closed Lost deals only — NULL otherwise
+        expr: LOSS_REASON
+        data_type: VARCHAR
+    time_dimensions:
+      - name: CLOSE_DATE
+        synonyms: ["close date", "expected close"]
+        description: >
+          For Closed Won/Lost this is actual close date.
+          For pipeline deals this is EXPECTED close date.
+        expr: CLOSE_DATE
+        data_type: DATE
+      - name: CREATED_DATE
+        synonyms: ["created", "creation date"]
+        description: CRM created date
+        expr: CREATED_DATE
+        data_type: DATE
+    facts:
+      - name: DEAL_VALUE
+        synonyms: ["deal amount", "deal size", "value", "revenue", "bookings", "pipeline value"]
+        description: Deal value in USD
+        expr: DEAL_VALUE
+        data_type: NUMBER
+    metrics:
+      - name: total_q2_bookings_so_far
+        synonyms: ["Q2 revenue", "Q2 closed won total", "Q2 bookings"]
+        description: Total Q2 Closed Won deal value so far
+        expr: "SUM(CASE WHEN STAGE = 'Closed Won' THEN DEAL_VALUE ELSE 0 END)"
+      - name: total_q2_pipeline_value
+        synonyms: ["active pipeline", "open pipeline", "pipeline total"]
+        description: Total Q2 active pipeline deal value (Negotiation + Proposal + Discovery)
+        expr: "SUM(CASE WHEN STAGE IN ('Negotiation','Proposal','Discovery') THEN DEAL_VALUE ELSE 0 END)"
+      - name: q2_closed_by_day32
+        synonyms: ["Q2 pace", "Q2 day 32"]
+        description: Total Q2 Closed Won by day 32 (close_date between 2026-04-01 and 2026-05-02)
+        expr: "SUM(CASE WHEN STAGE = 'Closed Won' AND CLOSE_DATE BETWEEN '2026-04-01' AND '2026-05-02' THEN DEAL_VALUE ELSE 0 END)"
+      - name: q2_deal_count
+        description: Count of Q2 deals
+        expr: "COUNT(*)"
+    filters:
+      - name: q2_closed_won
+        synonyms: ["Q2 won deals", "Q2 bookings"]
+        description: Q2 Closed Won deals only
+        expr: "STAGE = 'Closed Won' AND CLOSE_DATE >= '2026-04-01' AND CLOSE_DATE <= '2026-06-30'"
+      - name: q2_active_pipeline
+        synonyms: ["pipeline", "open deals", "active deals"]
+        description: Q2 active pipeline stages (Negotiation, Proposal, Discovery)
+        expr: "STAGE IN ('Negotiation','Proposal','Discovery')"
+      - name: enterprise_segment
+        description: Enterprise segment only
+        expr: "SEGMENT = 'Enterprise'"
+      - name: midmarket_segment
+        description: Mid-Market segment only
+        expr: "SEGMENT = 'Mid-Market'"
+      - name: smb_segment
+        description: SMB segment only
+        expr: "SEGMENT = 'SMB'"
+      - name: q2_pace_day32
+        description: Q2 Closed Won by day 32 (Apr 1 through May 2 2026)
+        expr: "STAGE = 'Closed Won' AND CLOSE_DATE BETWEEN '2026-04-01' AND '2026-05-02'"
+
+  - name: Q1_REPS
+    base_table:
+      database: MERIDIAN_SALES
+      schema: GOLD
+      table: Q1_REPS
+    description: Sales rep details with Q1 2026 quota targets.
+    primary_key:
+      columns:
+        - REP_ID
+    dimensions:
+      - name: REP_ID
+        description: Joins to Q1_DEALS.REP_ID
+        expr: REP_ID
+        data_type: VARCHAR
+        unique: true
+      - name: REP_NAME
+        synonyms: ["rep", "sales rep", "salesperson", "name"]
+        description: Full name of sales rep
+        expr: REP_NAME
+        data_type: VARCHAR
+      - name: SEGMENT
+        synonyms: ["market segment"]
+        description: Segment rep sells into
+        expr: SEGMENT
+        data_type: VARCHAR
+        is_enum: true
+        sample_values: ["Enterprise", "Mid-Market", "SMB"]
+      - name: REGION
+        synonyms: ["territory"]
+        description: Region rep covers
+        expr: REGION
+        data_type: VARCHAR
+        is_enum: true
+        sample_values: ["West", "Central", "Northeast", "Southeast"]
+      - name: MANAGER
+        synonyms: ["boss", "manager name"]
+        description: Rep manager name
+        expr: MANAGER
+        data_type: VARCHAR
+    time_dimensions:
+      - name: HIRE_DATE
+        description: Date rep was hired
+        expr: HIRE_DATE
+        data_type: DATE
+    facts:
+      - name: QUOTA_Q1_2026
+        synonyms: ["Q1 quota", "Q1 target", "quota"]
+        description: Q1 2026 quota target in USD
+        expr: QUOTA_Q1_2026
+        data_type: NUMBER
+
+  - name: Q2_REPS
+    base_table:
+      database: MERIDIAN_SALES
+      schema: GOLD
+      table: Q2_REPS
+    description: >
+      Rep details with both Q1 and Q2 2026 quota targets.
+      Always use QUOTA_Q2_2026 for Q2 calculations.
+    primary_key:
+      columns:
+        - REP_ID
+    dimensions:
+      - name: REP_ID
+        description: Joins to Q2_DEALS.REP_ID
+        expr: REP_ID
+        data_type: VARCHAR
+        unique: true
+      - name: REP_NAME
+        synonyms: ["rep", "sales rep", "salesperson", "name"]
+        description: Full name of sales rep
+        expr: REP_NAME
+        data_type: VARCHAR
+      - name: SEGMENT
+        synonyms: ["market segment"]
+        description: Segment rep sells into
+        expr: SEGMENT
+        data_type: VARCHAR
+        is_enum: true
+        sample_values: ["Enterprise", "Mid-Market", "SMB"]
+      - name: REGION
+        synonyms: ["territory"]
+        description: Region rep covers
+        expr: REGION
+        data_type: VARCHAR
+        is_enum: true
+        sample_values: ["West", "Central", "Northeast", "Southeast"]
+      - name: MANAGER
+        synonyms: ["boss", "manager name"]
+        description: Rep manager name
+        expr: MANAGER
+        data_type: VARCHAR
+    time_dimensions:
+      - name: HIRE_DATE
+        description: Date rep was hired
+        expr: HIRE_DATE
+        data_type: DATE
+    facts:
+      - name: QUOTA_Q1_2026
+        synonyms: ["Q1 quota", "Q1 target"]
+        description: Q1 2026 quota target in USD
+        expr: QUOTA_Q1_2026
+        data_type: NUMBER
+      - name: QUOTA_Q2_2026
+        synonyms: ["Q2 quota", "Q2 target", "quota", "target", "this quarter quota"]
+        description: Q2 2026 quota target in USD — use this for all Q2 quota calculations
+        expr: QUOTA_Q2_2026
+        data_type: NUMBER
+
+relationships:
+  - name: q1_deals_to_q1_reps
+    left_table: Q1_DEALS
+    right_table: Q1_REPS
+    relationship_columns:
+      - left_column: REP_ID
+        right_column: REP_ID
+  - name: q2_deals_to_q2_reps
+    left_table: Q2_DEALS
+    right_table: Q2_REPS
+    relationship_columns:
+      - left_column: REP_ID
+        right_column: REP_ID
+
+custom_instructions: |
+  CRITICAL BUSINESS RULES:
+  - Q1 (Jan-Mar 2026) is FINAL — all numbers are actual results.
+  - Q2 (Apr-Jun 2026) is IN PROGRESS as of May 2, 2026 — only 32 days into the quarter.
+  - For Q2 risk assessment, ALWAYS use pipeline coverage, not attainment alone.
+  - Pipeline coverage = (closed_won + active_pipeline) / quota * 100.
+  - Active pipeline stages are: Negotiation, Proposal, Discovery.
+  - At-risk threshold: pipeline coverage below 75%.
+  - Negotiation stage exists in Q2 but NOT in Q1.
+  - When asked about "this quarter" or "current quarter", use Q2 data.
+  - When asked about "quota" or "target" for Q2, always use QUOTA_Q2_2026.
+  - When comparing Q1 vs Q2 pace, Q1 day 32 = close_date <= '2026-02-01', Q2 day 32 = close_date between '2026-04-01' and '2026-05-02'.
+  - JOIN Q2_DEALS to Q2_REPS on REP_ID for Q2 questions. JOIN Q1_DEALS to Q1_REPS on REP_ID for Q1 questions.
+  - For Q2 deals, always filter CLOSE_DATE >= '2026-04-01' to exclude deals from other quarters.
+  - Round percentages to 1 decimal place.
+
+verified_queries:
+  - name: enterprise_tracking
+    question: How is the Enterprise segment tracking against quota this quarter?
+    use_as_onboarding_question: true
+    sql: |
+      SELECT
+        r.SEGMENT,
+        SUM(r.QUOTA_Q2_2026) AS COMBINED_QUOTA,
+        SUM(CASE WHEN d.STAGE = 'Closed Won' THEN d.DEAL_VALUE ELSE 0 END) AS Q2_CLOSED_WON,
+        SUM(CASE WHEN d.STAGE IN ('Negotiation','Proposal','Discovery') THEN d.DEAL_VALUE ELSE 0 END) AS Q2_PIPELINE,
+        ROUND((SUM(CASE WHEN d.STAGE = 'Closed Won' THEN d.DEAL_VALUE ELSE 0 END) +
+            SUM(CASE WHEN d.STAGE IN ('Negotiation','Proposal','Discovery') THEN d.DEAL_VALUE ELSE 0 END)) /
+            SUM(r.QUOTA_Q2_2026) * 100, 1) AS PIPELINE_COVERAGE_PCT
+      FROM MERIDIAN_SALES.GOLD.Q2_DEALS d
+      JOIN MERIDIAN_SALES.GOLD.Q2_REPS r ON d.REP_ID = r.REP_ID
+      WHERE d.CLOSE_DATE >= '2026-04-01'
+      AND r.SEGMENT = 'Enterprise'
+      GROUP BY r.SEGMENT
+
+  - name: at_risk_reps
+    question: Which reps are at risk of missing Q2?
+    use_as_onboarding_question: true
+    sql: |
+      SELECT
+        r.REP_NAME,
+        r.SEGMENT,
+        r.QUOTA_Q2_2026,
+        SUM(CASE WHEN d.STAGE = 'Closed Won' THEN d.DEAL_VALUE ELSE 0 END) AS Q2_CLOSED_WON,
+        SUM(CASE WHEN d.STAGE IN ('Negotiation','Proposal','Discovery') THEN d.DEAL_VALUE ELSE 0 END) AS Q2_PIPELINE,
+        ROUND((SUM(CASE WHEN d.STAGE = 'Closed Won' THEN d.DEAL_VALUE ELSE 0 END) +
+            SUM(CASE WHEN d.STAGE IN ('Negotiation','Proposal','Discovery') THEN d.DEAL_VALUE ELSE 0 END)) /
+            r.QUOTA_Q2_2026 * 100, 1) AS PIPELINE_COVERAGE_PCT,
+        CASE
+            WHEN ROUND((SUM(CASE WHEN d.STAGE = 'Closed Won' THEN d.DEAL_VALUE ELSE 0 END) +
+                SUM(CASE WHEN d.STAGE IN ('Negotiation','Proposal','Discovery') THEN d.DEAL_VALUE ELSE 0 END)) /
+                r.QUOTA_Q2_2026 * 100, 1) < 75 THEN 'HIGH'
+            WHEN ROUND((SUM(CASE WHEN d.STAGE = 'Closed Won' THEN d.DEAL_VALUE ELSE 0 END) +
+                SUM(CASE WHEN d.STAGE IN ('Negotiation','Proposal','Discovery') THEN d.DEAL_VALUE ELSE 0 END)) /
+                r.QUOTA_Q2_2026 * 100, 1) < 90 THEN 'MEDIUM'
+            ELSE 'LOW'
+        END AS RISK_FLAG
+      FROM MERIDIAN_SALES.GOLD.Q2_DEALS d
+      JOIN MERIDIAN_SALES.GOLD.Q2_REPS r ON d.REP_ID = r.REP_ID
+      WHERE d.CLOSE_DATE >= '2026-04-01'
+      GROUP BY r.REP_NAME, r.SEGMENT, r.QUOTA_Q2_2026
+      HAVING PIPELINE_COVERAGE_PCT < 75
+      ORDER BY PIPELINE_COVERAGE_PCT ASC
+
+  - name: q2_vs_q1_pace
+    question: How does Q2 attainment compare to where we were at the same point in Q1?
+    use_as_onboarding_question: true
+    sql: |
+      SELECT
+        'Q1 Day 32 (by Feb 1)' AS PERIOD,
+        SUM(CASE WHEN STAGE = 'Closed Won' AND CLOSE_DATE <= '2026-02-01'
+            THEN DEAL_VALUE ELSE 0 END) AS CLOSED_WON_VALUE,
+        COUNT(CASE WHEN STAGE = 'Closed Won' AND CLOSE_DATE <= '2026-02-01'
+            THEN 1 END) AS DEALS_CLOSED
+      FROM MERIDIAN_SALES.GOLD.Q1_DEALS
+      UNION ALL
+      SELECT
+        'Q2 Day 32 (by May 2)' AS PERIOD,
+        SUM(CASE WHEN STAGE = 'Closed Won'
+            AND CLOSE_DATE BETWEEN '2026-04-01' AND '2026-05-02'
+            THEN DEAL_VALUE ELSE 0 END) AS CLOSED_WON_VALUE,
+        COUNT(CASE WHEN STAGE = 'Closed Won'
+            AND CLOSE_DATE BETWEEN '2026-04-01' AND '2026-05-02'
+            THEN 1 END) AS DEALS_CLOSED
+      FROM MERIDIAN_SALES.GOLD.Q2_DEALS
