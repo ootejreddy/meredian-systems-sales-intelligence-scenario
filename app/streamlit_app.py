@@ -156,15 +156,27 @@ def call_agent(question: str) -> dict:
 
         if "content" in response:
             for block in response["content"]:
-                if block.get("type") == "text":
+                block_type = block.get("type", "")
+
+                # Extract text content
+                if block_type == "text":
                     answer_text += block.get("text", "")
-                elif block.get("type") == "tool_result":
+
+                # Extract SQL from tool_result blocks
+                elif block_type == "tool_result":
+                    # tool_result content can be at block level or nested
                     content_list = block.get("content", [])
+                    if not content_list and "tool_result" in block:
+                        content_list = block["tool_result"].get("content", [])
                     for item in content_list:
-                        if item.get("type") == "json":
+                        if isinstance(item, dict) and item.get("type") == "json":
                             json_data = item.get("json", {})
-                            if "sql" in json_data:
+                            # Only grab sql from execution results, not semantic context
+                            if "sql" in json_data and "result_set" in json_data:
                                 source_sql = json_data["sql"]
+                            elif "sql" in json_data and "query_id" in json_data:
+                                source_sql = json_data["sql"]
+
         elif "message" in response:
             answer_text = response["message"]
 
