@@ -1,0 +1,12 @@
+# Core Snowflake
+snowflake-connector-python==3.12.3
+snowflake-snowpark-python==1.26.0
+
+# Application
+streamlit==1.45.1
+python-dotenv==1.1.0
+pandas==2.2.3
+
+# Testing
+pytest==8.3.5
+pytest-cov==6.1.0
