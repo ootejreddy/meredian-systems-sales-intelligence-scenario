@@ -40,14 +40,14 @@ Same as Q1_REPS plus quota_q2_2026
 ## Business Definitions
 
 - Bookings = total deal value of all Closed Won deals in a period — actual signed revenue, not pipeline
-- Attainment = closed won / quota * 100 — what a rep has actually booked as % of target
+- Attainment = closed won / quota \* 100 — what a rep has actually booked as % of target
 - Attainment is the complete picture for Q1 (final) but misleading for Q2 (only 32 days in)
-- Quota coverage = (closed won + active pipeline) / quota * 100 — correct risk signal for Q2
+- Quota coverage = (closed won + active pipeline) / quota \* 100 — correct risk signal for Q2
 - Active pipeline = deals in Negotiation, Proposal, or Discovery stages — excludes Closed Won and Closed Lost
 - At-risk = quota coverage below 75%
 - Pace = closed won bookings by a specific day cutoff within a quarter — used to compare progress across quarters at the same point in time
 - Day 32 = calendar day 32 of a quarter. Q1 day 32 = Feb 1 2026. Q2 day 32 = May 2 2026. Used as the comparison point between Q1 and Q2.
-- Behind Q1 pace = (Q2 day32 bookings / Q1 day32 bookings - 1) * 100. Current value: (518K / 1260K - 1) * 100 = -59%. Negative means Q2 is behind.
+- Behind Q1 pace = (Q2 day32 bookings / Q1 day32 bookings - 1) _ 100. Current value: (518K / 1260K - 1) _ 100 = -59%. Negative means Q2 is behind.
 - 75% at-risk threshold = industry standard early-quarter risk signal. Below 75% quota coverage means a rep cannot hit quota even if all pipeline converts, which is statistically unlikely. Not a Meridian-specific rule.
 
 ## Key Business Rules
@@ -61,9 +61,10 @@ Same as Q1_REPS plus quota_q2_2026
 
 - Q1 total bookings: $6,041,000
 - Q2 bookings so far: $518,000
-- Q2 active pipeline: $5,198,000
+- Q2 active pipeline (raw): $5,198,000
+- Q2 active pipeline (clean, after exclusion): ~$3,728,000
 - Q1 bookings at day 32 (Feb 1): $1,260,000
-- Q2 is 59% behind Q1 pace at day 32: (518K / 1260K - 1) * 100
+- Q2 is 59% behind Q1 pace at day 32: (518K / 1260K - 1) \* 100
 - High risk reps: Priya Patel 74%, Kevin Marsh 74%,
   Danielle Torres 65%, Aisha Williams 63%
 - Tom Bradley is LOW risk at 99% — do NOT flag him as at risk
@@ -98,6 +99,37 @@ Same as Q1_REPS plus quota_q2_2026
 - When citing Q2 pipeline values, flag that these are expected close dates, not actual closed revenue
 - When Negotiation stage deals are present, call it a positive signal — deals further along than Q1 was at same point
 - 75% threshold is industry-standard: below it means a rep cannot hit quota even if all pipeline converts
-- When comparing Q1 vs Q2, state the formula: (Q2 day32 / Q1 day32 - 1) * 100 and note Q2 is still in progress
+- When comparing Q1 vs Q2, state the formula: (Q2 day32 / Q1 day32 - 1) \* 100 and note Q2 is still in progress
 - Flag all assumptions explicitly in the FLAG section
 - Response format: ANSWER / DATA / FLAG
+
+## Data Quality Findings — IMPORTANT
+
+Q2_DEALS is a full CRM snapshot not Q2-only table.
+Contains 88 Q1 carry-forward deals + 4 new Q2 deals = 92 total.
+
+Stage Regression Anomalies: 15 deals
+Total regressed value: $1,470,000
+These deals were Closed Won in Q1
+but appear as active pipeline in Q2.
+
+Truly new Q2 deals: 4 only
+
+- OPP-089 Sunrise Consulting $65K Discovery
+- OPP-090 Maple Street Cafe $35K Proposal
+- OPP-091 Harbor Fitness $28K Discovery
+- OPP-092 Riverdale Bakery $42K Proposal
+
+CORRECTED Q2 Pipeline Numbers:
+Raw pipeline (including anomalies): $5,198,000
+Anomaly deals value: $1,470,000
+Clean pipeline (excluding anomalies): ~$3,728,000
+Always use the clean pipeline number in analysis.
+
+ANOMALY DEAL IDs TO EXCLUDE (all 15):
+OPP-020, OPP-049, OPP-050, OPP-076, OPP-077,
+OPP-078, OPP-080, OPP-081, OPP-082, OPP-083,
+OPP-084, OPP-085, OPP-086, OPP-087, OPP-088
+
+When computing active pipeline, always add:
+AND DEAL_ID NOT IN ('OPP-020','OPP-049','OPP-050','OPP-076','OPP-077','OPP-078','OPP-080','OPP-081','OPP-082','OPP-083','OPP-084','OPP-085','OPP-086','OPP-087','OPP-088')

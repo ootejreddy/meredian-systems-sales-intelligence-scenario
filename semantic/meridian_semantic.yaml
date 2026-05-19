@@ -8,6 +8,12 @@ description: >
   Use quota coverage not attainment alone for Q2 risk.
   Quota coverage = (closed won + active pipeline) / quota * 100.
   At-risk threshold: quota coverage below 75 percent.
+  DATA QUALITY NOTE: 15 deals show stage regression (Closed Won in Q1
+  reverted to active pipeline in Q2) with total value of $1.47M —
+  these are excluded from all pipeline calculations.
+  Excluded deal IDs: OPP-020, OPP-049, OPP-050, OPP-076, OPP-077,
+  OPP-078, OPP-080, OPP-081, OPP-082, OPP-083, OPP-084, OPP-085,
+  OPP-086, OPP-087, OPP-088.
 
 tables:
   - name: Q1_DEALS
@@ -385,6 +391,18 @@ custom_instructions: |
   - LOW RISK: quota coverage 90% or above. Rep is on track. Use ELSE 'LOW'.
   - Always classify risk using quota coverage — never attainment alone.
 
+  SQL PATTERNS:
+  - NEVER compute SUM(quota) by joining Q2_REPS to Q2_DEALS directly when grouping by segment. Each rep's quota gets counted once per deal (fan-out), inflating the total. Always compute quota in a separate subquery from Q2_REPS alone, then join to the deal aggregation subquery.
+  - Correct pattern for segment-level quota: SELECT SUM(QUOTA_Q2_2026) FROM Q2_REPS WHERE SEGMENT = 'X' GROUP BY SEGMENT — no join to deals.
+  - Correct pattern for rep-level quota: GROUP BY rep_name, quota — quota appears once per rep group, no inflation.
+
+  DATA QUALITY — STAGE REGRESSION EXCLUSION:
+  - 15 deals show impossible stage regression from Closed Won in Q1 to active pipeline in Q2.
+  - Total regressed value is $1.47M. These are excluded from all pipeline calculations.
+  - Excluded DEAL_IDs: 'OPP-020','OPP-049','OPP-050','OPP-076','OPP-077','OPP-078','OPP-080','OPP-081','OPP-082','OPP-083','OPP-084','OPP-085','OPP-086','OPP-087','OPP-088'
+  - When computing active pipeline, ALWAYS add: AND DEAL_ID NOT IN ('OPP-020','OPP-049','OPP-050','OPP-076','OPP-077','OPP-078','OPP-080','OPP-081','OPP-082','OPP-083','OPP-084','OPP-085','OPP-086','OPP-087','OPP-088')
+  - Clean Q2 pipeline after exclusion is approximately $3.73M.
+
   CRITICAL BUSINESS RULES:
   - Q1 (Jan-Mar 2026) is FINAL — all numbers are actual results.
   - Q2 (Apr-Jun 2026) is IN PROGRESS as of May 2, 2026 — only 32 days into the quarter.
@@ -402,18 +420,31 @@ verified_queries:
     use_as_onboarding_question: true
     sql: |
       SELECT
-        r.SEGMENT,
-        SUM(r.QUOTA_Q2_2026) AS COMBINED_QUOTA,
-        SUM(CASE WHEN d.STAGE = 'Closed Won' THEN d.DEAL_VALUE ELSE 0 END) AS Q2_CLOSED_WON,
-        SUM(CASE WHEN d.STAGE IN ('Negotiation','Proposal','Discovery') THEN d.DEAL_VALUE ELSE 0 END) AS Q2_PIPELINE,
-        ROUND((SUM(CASE WHEN d.STAGE = 'Closed Won' THEN d.DEAL_VALUE ELSE 0 END) +
-            SUM(CASE WHEN d.STAGE IN ('Negotiation','Proposal','Discovery') THEN d.DEAL_VALUE ELSE 0 END)) /
-            SUM(r.QUOTA_Q2_2026) * 100, 1) AS QUOTA_COVERAGE_PCT
-      FROM MERIDIAN_SALES.GOLD.Q2_DEALS d
-      JOIN MERIDIAN_SALES.GOLD.Q2_REPS r ON d.REP_ID = r.REP_ID
-      WHERE d.CLOSE_DATE >= '2026-04-01'
-      AND r.SEGMENT = 'Enterprise'
-      GROUP BY r.SEGMENT
+        deals.SEGMENT,
+        quota.COMBINED_QUOTA,
+        deals.Q2_CLOSED_WON,
+        deals.Q2_PIPELINE,
+        ROUND((deals.Q2_CLOSED_WON + deals.Q2_PIPELINE) / quota.COMBINED_QUOTA * 100, 1) AS QUOTA_COVERAGE_PCT,
+        ROUND(deals.Q2_CLOSED_WON / quota.COMBINED_QUOTA * 100, 1) AS ATTAINMENT_PCT
+      FROM (
+        SELECT
+          r.SEGMENT,
+          SUM(CASE WHEN d.STAGE = 'Closed Won' THEN d.DEAL_VALUE ELSE 0 END) AS Q2_CLOSED_WON,
+          SUM(CASE WHEN d.STAGE IN ('Negotiation','Proposal','Discovery')
+              AND d.DEAL_ID NOT IN ('OPP-020','OPP-049','OPP-050','OPP-076','OPP-077','OPP-078','OPP-080','OPP-081','OPP-082','OPP-083','OPP-084','OPP-085','OPP-086','OPP-087','OPP-088')
+              THEN d.DEAL_VALUE ELSE 0 END) AS Q2_PIPELINE
+        FROM MERIDIAN_SALES.GOLD.Q2_DEALS d
+        JOIN MERIDIAN_SALES.GOLD.Q2_REPS r ON d.REP_ID = r.REP_ID
+        WHERE d.CLOSE_DATE >= '2026-04-01'
+        AND r.SEGMENT = 'Enterprise'
+        GROUP BY r.SEGMENT
+      ) deals
+      JOIN (
+        SELECT SEGMENT, SUM(QUOTA_Q2_2026) AS COMBINED_QUOTA
+        FROM MERIDIAN_SALES.GOLD.Q2_REPS
+        WHERE SEGMENT = 'Enterprise'
+        GROUP BY SEGMENT
+      ) quota ON deals.SEGMENT = quota.SEGMENT
 
   - name: at_risk_reps
     question: Which reps are at risk of missing Q2?
@@ -424,16 +455,24 @@ verified_queries:
         r.SEGMENT,
         r.QUOTA_Q2_2026,
         SUM(CASE WHEN d.STAGE = 'Closed Won' THEN d.DEAL_VALUE ELSE 0 END) AS Q2_CLOSED_WON,
-        SUM(CASE WHEN d.STAGE IN ('Negotiation','Proposal','Discovery') THEN d.DEAL_VALUE ELSE 0 END) AS Q2_PIPELINE,
+        SUM(CASE WHEN d.STAGE IN ('Negotiation','Proposal','Discovery')
+            AND d.DEAL_ID NOT IN ('OPP-020','OPP-049','OPP-050','OPP-076','OPP-077','OPP-078','OPP-080','OPP-081','OPP-082','OPP-083','OPP-084','OPP-085','OPP-086','OPP-087','OPP-088')
+            THEN d.DEAL_VALUE ELSE 0 END) AS Q2_PIPELINE,
         ROUND((SUM(CASE WHEN d.STAGE = 'Closed Won' THEN d.DEAL_VALUE ELSE 0 END) +
-            SUM(CASE WHEN d.STAGE IN ('Negotiation','Proposal','Discovery') THEN d.DEAL_VALUE ELSE 0 END)) /
+            SUM(CASE WHEN d.STAGE IN ('Negotiation','Proposal','Discovery')
+                AND d.DEAL_ID NOT IN ('OPP-020','OPP-049','OPP-050','OPP-076','OPP-077','OPP-078','OPP-080','OPP-081','OPP-082','OPP-083','OPP-084','OPP-085','OPP-086','OPP-087','OPP-088')
+                THEN d.DEAL_VALUE ELSE 0 END)) /
             r.QUOTA_Q2_2026 * 100, 1) AS QUOTA_COVERAGE_PCT,
         CASE
             WHEN ROUND((SUM(CASE WHEN d.STAGE = 'Closed Won' THEN d.DEAL_VALUE ELSE 0 END) +
-                SUM(CASE WHEN d.STAGE IN ('Negotiation','Proposal','Discovery') THEN d.DEAL_VALUE ELSE 0 END)) /
+                SUM(CASE WHEN d.STAGE IN ('Negotiation','Proposal','Discovery')
+                    AND d.DEAL_ID NOT IN ('OPP-020','OPP-049','OPP-050','OPP-076','OPP-077','OPP-078','OPP-080','OPP-081','OPP-082','OPP-083','OPP-084','OPP-085','OPP-086','OPP-087','OPP-088')
+                    THEN d.DEAL_VALUE ELSE 0 END)) /
                 r.QUOTA_Q2_2026 * 100, 1) < 75 THEN 'HIGH'
             WHEN ROUND((SUM(CASE WHEN d.STAGE = 'Closed Won' THEN d.DEAL_VALUE ELSE 0 END) +
-                SUM(CASE WHEN d.STAGE IN ('Negotiation','Proposal','Discovery') THEN d.DEAL_VALUE ELSE 0 END)) /
+                SUM(CASE WHEN d.STAGE IN ('Negotiation','Proposal','Discovery')
+                    AND d.DEAL_ID NOT IN ('OPP-020','OPP-049','OPP-050','OPP-076','OPP-077','OPP-078','OPP-080','OPP-081','OPP-082','OPP-083','OPP-084','OPP-085','OPP-086','OPP-087','OPP-088')
+                    THEN d.DEAL_VALUE ELSE 0 END)) /
                 r.QUOTA_Q2_2026 * 100, 1) < 90 THEN 'MEDIUM'
             ELSE 'LOW'
         END AS RISK_FLAG

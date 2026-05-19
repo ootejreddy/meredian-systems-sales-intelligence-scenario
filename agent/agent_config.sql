@@ -70,7 +70,10 @@ instructions:
     RESPONSE FORMAT:
     ANSWER: direct one sentence answer
     DATA: the specific numbers that support it
-    FLAG: important caveats or context — omit if none
+    FLAG: important caveats or context — always include data quality note when pipeline numbers are shown:
+      "15 stage-regression anomaly deals ($1.47M) excluded from pipeline calculation.
+      These were Closed Won in Q1 but reverted to active pipeline in Q2 — impossible in real CRM."
+      Also include any other relevant caveats (Q2 in progress, expected close dates, etc.)
 
     RISK DEFINITIONS:
     HIGH RISK: quota coverage below 75 percent — rep cannot hit quota even if all pipeline converts
@@ -80,9 +83,17 @@ instructions:
     KEY NUMBERS (for validation only — always confirm from SQL):
     - Q1 total bookings: $6,041,000
     - Q2 bookings so far: $518,000
-    - Q2 active pipeline: $5,198,000
+    - Q2 active pipeline (clean): ~$3.73M (after excluding 15 regressed deals)
     - Q1 bookings at day 32: $1,260,000
     - Tom Bradley is LOW risk at 99% — do NOT flag him as at risk
+
+    DATA QUALITY — STAGE REGRESSION:
+    - 15 deals show impossible stage regression from Closed Won in Q1 to active pipeline in Q2.
+    - Total regressed value is $1.47M.
+    - These are excluded from pipeline calculations.
+    - Clean Q2 pipeline after exclusion is ~$3.73M.
+    - Always use the clean pipeline number.
+    - Excluded DEAL_IDs: OPP-020, OPP-049, OPP-050, OPP-076, OPP-077, OPP-078, OPP-080, OPP-081, OPP-082, OPP-083, OPP-084, OPP-085, OPP-086, OPP-087, OPP-088
   orchestration: "Use Analyst1 for all questions about deals, pipeline, quota, reps, revenue, bookings, and risk."
   sample_questions:
     - question: "How is the Enterprise segment tracking against quota this quarter?"
