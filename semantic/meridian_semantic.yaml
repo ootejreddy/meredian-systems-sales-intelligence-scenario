@@ -5,9 +5,9 @@ description: >
   Q2 (Apr-Jun 2026) is in progress as of May 2 2026 —
   only 32 days into the quarter.
   Q2 pipeline deals have EXPECTED close dates not actual.
-  Use pipeline coverage not attainment alone for Q2 risk.
-  Pipeline coverage = (closed won + active pipeline) / quota * 100.
-  At-risk threshold: pipeline coverage below 75 percent.
+  Use quota coverage not attainment alone for Q2 risk.
+  Quota coverage = (closed won + active pipeline) / quota * 100.
+  At-risk threshold: quota coverage below 75 percent.
 
 tables:
   - name: Q1_DEALS
@@ -83,13 +83,24 @@ tables:
         data_type: NUMBER
     metrics:
       - name: total_q1_bookings
-        synonyms: ["Q1 revenue", "Q1 closed won total"]
-        description: Total Q1 Closed Won deal value across all reps
+        synonyms: ["Q1 revenue", "Q1 closed won total", "Q1 bookings", "bookings"]
+        description: >
+          Bookings = total deal value of all Closed Won deals. Actual signed revenue only —
+          does not include active pipeline. Q1 is final so this is the complete Q1 revenue number.
         expr: "SUM(CASE WHEN STAGE = 'Closed Won' THEN DEAL_VALUE ELSE 0 END)"
       - name: q1_closed_by_day32
-        synonyms: ["Q1 pace", "Q1 day 32"]
-        description: Total Q1 Closed Won by day 32 (close_date <= 2026-02-01)
+        synonyms: ["Q1 pace", "Q1 day 32", "Q1 pace at day 32"]
+        description: >
+          Q1 pace at day 32. Pace = closed won bookings by a specific day cutoff within a quarter.
+          Day 32 of Q1 = Feb 1 2026. Used to compare Q1 vs Q2 progress at the same point in time.
         expr: "SUM(CASE WHEN STAGE = 'Closed Won' AND CLOSE_DATE <= '2026-02-01' THEN DEAL_VALUE ELSE 0 END)"
+      - name: q1_attainment_pct
+        synonyms: ["Q1 attainment", "Q1 quota attainment", "Q1 percent of quota"]
+        description: >
+          Q1 attainment = closed won / quota * 100.
+          Measures what a rep actually booked as a percentage of their Q1 target.
+          Use this for final Q1 performance — Q1 is closed so attainment is the complete picture.
+        expr: "ROUND(SUM(CASE WHEN STAGE = 'Closed Won' THEN DEAL_VALUE ELSE 0 END) / NULLIF(SUM(QUOTA_Q1_2026), 0) * 100, 1)"
       - name: q1_deal_count
         description: Count of Q1 deals
         expr: "COUNT(*)"
@@ -184,17 +195,32 @@ tables:
         data_type: NUMBER
     metrics:
       - name: total_q2_bookings_so_far
-        synonyms: ["Q2 revenue", "Q2 closed won total", "Q2 bookings"]
-        description: Total Q2 Closed Won deal value so far
+        synonyms: ["Q2 revenue", "Q2 closed won total", "Q2 bookings", "bookings"]
+        description: >
+          Bookings = total deal value of all Closed Won deals. Actual signed revenue only —
+          does not include active pipeline. Q2 is in progress so this is a partial number as of May 2 2026.
         expr: "SUM(CASE WHEN STAGE = 'Closed Won' THEN DEAL_VALUE ELSE 0 END)"
       - name: total_q2_pipeline_value
         synonyms: ["active pipeline", "open pipeline", "pipeline total"]
-        description: Total Q2 active pipeline deal value (Negotiation + Proposal + Discovery)
+        description: >
+          Total Q2 active pipeline = deals in Negotiation, Proposal, or Discovery stages.
+          These have EXPECTED close dates entered by reps — not actual closed revenue.
         expr: "SUM(CASE WHEN STAGE IN ('Negotiation','Proposal','Discovery') THEN DEAL_VALUE ELSE 0 END)"
       - name: q2_closed_by_day32
-        synonyms: ["Q2 pace", "Q2 day 32"]
-        description: Total Q2 Closed Won by day 32 (close_date between 2026-04-01 and 2026-05-02)
+        synonyms: ["Q2 pace", "Q2 day 32", "Q2 pace at day 32"]
+        description: >
+          Q2 pace at day 32. Pace = closed won bookings by a specific day cutoff within a quarter.
+          Day 32 of Q2 = May 2 2026. Compare to Q1 day 32 ($1,260,000) to assess pace gap.
+          Behind Q1 pace formula: (Q2 day32 / Q1 day32 - 1) * 100. Current gap: -59%.
         expr: "SUM(CASE WHEN STAGE = 'Closed Won' AND CLOSE_DATE BETWEEN '2026-04-01' AND '2026-05-02' THEN DEAL_VALUE ELSE 0 END)"
+      - name: q2_attainment_pct
+        synonyms: ["Q2 attainment", "Q2 quota attainment", "Q2 percent of quota", "attainment"]
+        description: >
+          Q2 attainment = closed won so far / quota * 100.
+          Measures only what has actually been booked — does NOT include active pipeline.
+          WARNING: Q2 is only 32 days in as of May 2 2026. A low attainment number is
+          expected at this stage. Always pair with quota_coverage_pct for full Q2 risk picture.
+        expr: "ROUND(SUM(CASE WHEN STAGE = 'Closed Won' THEN DEAL_VALUE ELSE 0 END) / NULLIF(SUM(QUOTA_Q2_2026), 0) * 100, 1)"
       - name: q2_deal_count
         description: Count of Q2 deals
         expr: "COUNT(*)"
@@ -347,10 +373,10 @@ custom_instructions: |
   CRITICAL BUSINESS RULES:
   - Q1 (Jan-Mar 2026) is FINAL — all numbers are actual results.
   - Q2 (Apr-Jun 2026) is IN PROGRESS as of May 2, 2026 — only 32 days into the quarter.
-  - For Q2 risk assessment, ALWAYS use pipeline coverage, not attainment alone.
-  - Pipeline coverage = (closed_won + active_pipeline) / quota * 100.
+  - For Q2 risk assessment, ALWAYS use quota coverage, not attainment alone.
+  - Quota coverage = (closed_won + active_pipeline) / quota * 100.
   - Active pipeline stages are: Negotiation, Proposal, Discovery.
-  - At-risk threshold: pipeline coverage below 75%.
+  - At-risk threshold: quota coverage below 75%.
   - Negotiation stage exists in Q2 but NOT in Q1.
   - When asked about "this quarter" or "current quarter", use Q2 data.
   - When asked about "quota" or "target" for Q2, always use QUOTA_Q2_2026.
@@ -371,7 +397,7 @@ verified_queries:
         SUM(CASE WHEN d.STAGE IN ('Negotiation','Proposal','Discovery') THEN d.DEAL_VALUE ELSE 0 END) AS Q2_PIPELINE,
         ROUND((SUM(CASE WHEN d.STAGE = 'Closed Won' THEN d.DEAL_VALUE ELSE 0 END) +
             SUM(CASE WHEN d.STAGE IN ('Negotiation','Proposal','Discovery') THEN d.DEAL_VALUE ELSE 0 END)) /
-            SUM(r.QUOTA_Q2_2026) * 100, 1) AS PIPELINE_COVERAGE_PCT
+            SUM(r.QUOTA_Q2_2026) * 100, 1) AS QUOTA_COVERAGE_PCT
       FROM MERIDIAN_SALES.GOLD.Q2_DEALS d
       JOIN MERIDIAN_SALES.GOLD.Q2_REPS r ON d.REP_ID = r.REP_ID
       WHERE d.CLOSE_DATE >= '2026-04-01'
@@ -390,7 +416,7 @@ verified_queries:
         SUM(CASE WHEN d.STAGE IN ('Negotiation','Proposal','Discovery') THEN d.DEAL_VALUE ELSE 0 END) AS Q2_PIPELINE,
         ROUND((SUM(CASE WHEN d.STAGE = 'Closed Won' THEN d.DEAL_VALUE ELSE 0 END) +
             SUM(CASE WHEN d.STAGE IN ('Negotiation','Proposal','Discovery') THEN d.DEAL_VALUE ELSE 0 END)) /
-            r.QUOTA_Q2_2026 * 100, 1) AS PIPELINE_COVERAGE_PCT,
+            r.QUOTA_Q2_2026 * 100, 1) AS QUOTA_COVERAGE_PCT,
         CASE
             WHEN ROUND((SUM(CASE WHEN d.STAGE = 'Closed Won' THEN d.DEAL_VALUE ELSE 0 END) +
                 SUM(CASE WHEN d.STAGE IN ('Negotiation','Proposal','Discovery') THEN d.DEAL_VALUE ELSE 0 END)) /
@@ -404,8 +430,8 @@ verified_queries:
       JOIN MERIDIAN_SALES.GOLD.Q2_REPS r ON d.REP_ID = r.REP_ID
       WHERE d.CLOSE_DATE >= '2026-04-01'
       GROUP BY r.REP_NAME, r.SEGMENT, r.QUOTA_Q2_2026
-      HAVING PIPELINE_COVERAGE_PCT < 75
-      ORDER BY PIPELINE_COVERAGE_PCT ASC
+      HAVING QUOTA_COVERAGE_PCT < 75
+      ORDER BY QUOTA_COVERAGE_PCT ASC
 
   - name: q2_vs_q1_pace
     question: How does Q2 attainment compare to where we were at the same point in Q1?

@@ -19,7 +19,7 @@ tools:
 - Q1 is final, Q2 is in progress as of May 2 2026
 - Q2 pipeline deals have EXPECTED close dates
 - Always use MERIDIAN_SALES.GOLD schema prefix
-- At-risk threshold is 75% pipeline coverage
+- At-risk threshold is 75% quota coverage
 - Negotiation stage only exists in Q2 not Q1
 
 # SQL Best Practices for This Project

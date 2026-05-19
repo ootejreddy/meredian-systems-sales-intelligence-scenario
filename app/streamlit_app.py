@@ -34,7 +34,7 @@ with st.sidebar:
     - **Agent:** Snowflake Cortex Agent with Cortex Analyst
     - **Model:** claude-sonnet-4-5
     - **Trust:** Every answer grounded in SQL — no hallucination
-    - **At-risk threshold:** Pipeline coverage below 75 percent
+    - **At-risk threshold:** Quota coverage below 75 percent
     """)
     st.markdown("---")
     st.markdown("**Key Numbers**")
