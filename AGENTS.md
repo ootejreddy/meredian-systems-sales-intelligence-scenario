@@ -62,12 +62,14 @@ Same as Q1_REPS plus quota_q2_2026
 - Q1 total bookings: $6,041,000
 - Q2 bookings so far: $518,000
 - Q2 active pipeline (raw): $5,198,000
-- Q2 active pipeline (clean, after exclusion): ~$3,728,000
+- Q2 active pipeline (clean, after exclusion): $3,255,000
+- Excluded anomaly value (with Q2 close dates): $1,943,000
 - Q1 bookings at day 32 (Feb 1): $1,260,000
 - Q2 is 59% behind Q1 pace at day 32: (518K / 1260K - 1) \* 100
-- High risk reps: Priya Patel 74%, Kevin Marsh 74%,
-  Danielle Torres 65%, Aisha Williams 63%
-- Tom Bradley is LOW risk at 99% — do NOT flag him as at risk
+- High risk reps (7 below 75%): Aisha Williams 29%, Danielle Torres 30%,
+  Lisa Park 46%, Priya Patel 57%, Kevin Marsh 60%,
+  James Okafor 61%, Sarah Chen 62%
+- Tom Bradley is MEDIUM risk at 82% — do NOT flag him as HIGH risk
 
 ## What We Are Building
 
@@ -122,8 +124,8 @@ Truly new Q2 deals: 4 only
 
 CORRECTED Q2 Pipeline Numbers:
 Raw pipeline (including anomalies): $5,198,000
-Anomaly deals value: $1,470,000
-Clean pipeline (excluding anomalies): ~$3,728,000
+Anomaly deals excluded value: $1,943,000
+Clean pipeline (excluding anomalies): $3,255,000
 Always use the clean pipeline number in analysis.
 
 ANOMALY DEAL IDs TO EXCLUDE (all 15):

@@ -36,13 +36,6 @@ with st.sidebar:
     - **Trust:** Every answer grounded in SQL — no hallucination
     - **At-risk threshold:** Quota coverage below 75 percent
     """)
-    st.markdown("---")
-    st.markdown("**Key Numbers**")
-    sidebar_data = {
-        "Metric": ["Q1 Total", "Q2 Closed", "Q2 Pipeline", "High Risk Reps"],
-        "Value": ["$6.04M", "$518K", "$5.2M", "4"]
-    }
-    st.table(sidebar_data)
 
 # ------------------------------------------------------------
 # TITLE AND TRUST BANNER
@@ -79,11 +72,15 @@ with col2:
 with col3:
     q2_pipeline = session.sql(
         "SELECT SUM(DEAL_VALUE) FROM MERIDIAN_SALES.GOLD.Q2_DEALS "
-        "WHERE STAGE IN ('Negotiation','Proposal','Discovery')"
+        "WHERE STAGE IN ('Negotiation','Proposal','Discovery') "
+        "AND CLOSE_DATE >= '2026-04-01' "
+        "AND DEAL_ID NOT IN ('OPP-020','OPP-049','OPP-050','OPP-076','OPP-077',"
+        "'OPP-078','OPP-080','OPP-081','OPP-082','OPP-083',"
+        "'OPP-084','OPP-085','OPP-086','OPP-087','OPP-088')"
     ).collect()[0][0]
     q2_pipe_display = f"${q2_pipeline / 1_000_000:.2f}M" if q2_pipeline else "$0"
-    st.metric(label="Q2 Active Pipeline", value=q2_pipe_display, help="Open Deals")
-    st.caption("Open Deals")
+    st.metric(label="Q2 Active Pipeline", value=q2_pipe_display, help="Open Deals (cleaned)")
+    st.caption("Open Deals (cleaned)")
 
 with col4:
     at_risk_df = session.sql("""
@@ -91,6 +88,7 @@ with col4:
             SELECT r.REP_ID,
                 ROUND((SUM(CASE WHEN d.STAGE = 'Closed Won' THEN d.DEAL_VALUE ELSE 0 END) +
                     SUM(CASE WHEN d.STAGE IN ('Negotiation','Proposal','Discovery')
+                        AND d.DEAL_ID NOT IN ('OPP-020','OPP-049','OPP-050','OPP-076','OPP-077','OPP-078','OPP-080','OPP-081','OPP-082','OPP-083','OPP-084','OPP-085','OPP-086','OPP-087','OPP-088')
                         THEN d.DEAL_VALUE ELSE 0 END)) /
                     r.QUOTA_Q2_2026 * 100, 1) AS COVERAGE
             FROM MERIDIAN_SALES.GOLD.Q2_DEALS d
@@ -115,7 +113,7 @@ st.markdown("**Try these questions**")
 btn_col1, btn_col2, btn_col3 = st.columns(3)
 
 with btn_col1:
-    if st.button("How is Enterprise tracking against quota?", use_container_width=True):
+    if st.button("How is the Enterprise segment tracking against quota this quarter?", use_container_width=True):
         st.session_state.pending_question = "How is the Enterprise segment tracking against quota this quarter?"
 
 with btn_col2:
@@ -123,7 +121,7 @@ with btn_col2:
         st.session_state.pending_question = "Which reps are at risk of missing Q2?"
 
 with btn_col3:
-    if st.button("How does Q2 compare to Q1 at same point?", use_container_width=True):
+    if st.button("How does Q2 attainment compare to where we were at the same point in Q1?", use_container_width=True):
         st.session_state.pending_question = "How does Q2 attainment compare to where we were at the same point in Q1?"
 
 # ------------------------------------------------------------

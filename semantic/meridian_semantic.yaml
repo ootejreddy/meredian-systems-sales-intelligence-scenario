@@ -9,7 +9,7 @@ description: >
   Quota coverage = (closed won + active pipeline) / quota * 100.
   At-risk threshold: quota coverage below 75 percent.
   DATA QUALITY NOTE: 15 deals show stage regression (Closed Won in Q1
-  reverted to active pipeline in Q2) with total value of $1.47M —
+  reverted to active pipeline in Q2) with total excluded value of $1.94M —
   these are excluded from all pipeline calculations.
   Excluded deal IDs: OPP-020, OPP-049, OPP-050, OPP-076, OPP-077,
   OPP-078, OPP-080, OPP-081, OPP-082, OPP-083, OPP-084, OPP-085,
@@ -398,10 +398,10 @@ custom_instructions: |
 
   DATA QUALITY — STAGE REGRESSION EXCLUSION:
   - 15 deals show impossible stage regression from Closed Won in Q1 to active pipeline in Q2.
-  - Total regressed value is $1.47M. These are excluded from all pipeline calculations.
+  - Total excluded value is $1.94M. These are excluded from all pipeline calculations.
   - Excluded DEAL_IDs: 'OPP-020','OPP-049','OPP-050','OPP-076','OPP-077','OPP-078','OPP-080','OPP-081','OPP-082','OPP-083','OPP-084','OPP-085','OPP-086','OPP-087','OPP-088'
   - When computing active pipeline, ALWAYS add: AND DEAL_ID NOT IN ('OPP-020','OPP-049','OPP-050','OPP-076','OPP-077','OPP-078','OPP-080','OPP-081','OPP-082','OPP-083','OPP-084','OPP-085','OPP-086','OPP-087','OPP-088')
-  - Clean Q2 pipeline after exclusion is approximately $3.73M.
+  - Clean Q2 pipeline after exclusion is $3.26M.
 
   CRITICAL BUSINESS RULES:
   - Q1 (Jan-Mar 2026) is FINAL — all numbers are actual results.

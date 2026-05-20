@@ -1,0 +1,142 @@
+# Meridian Sales Intelligence — CCO Presentation
+## 10-Minute Deck + Q&A Prep
+
+---
+
+## SLIDE 1 — OPENING
+
+**Title:** A Faster Way to Get Answers You Can Trust
+
+**Speaker Notes:**
+
+I know this isn't the first time someone has put an AI tool in front of you. And I know the last time didn't go well. A number came out that wasn't real, and you got called out for it. That's a reasonable reason to be skeptical. So I'm not going to ask you to trust this today. I'm going to show you — and you can decide for yourself whether this earns your trust.
+
+---
+
+## SLIDE 2 — THE PROBLEM
+
+**Title:** The Question That Should Take 3 Seconds Takes 3 Days
+
+**Speaker Notes:**
+
+Right now, when you want to know something simple — "Are we going to hit quota this quarter?" — you email your analyst. They pull data. They build a spreadsheet. They send it back two or three days later. By then the picture has changed. You're making decisions on stale answers.
+
+What if you could just ask the question and get the answer immediately — directly from the same data your analyst uses — with the same math they'd do?
+
+---
+
+## SLIDE 3 — WHY THIS IS DIFFERENT
+
+**Title:** This Tool Does Not Guess — It Checks
+
+**Speaker Notes:**
+
+The old tool worked like this: it read a lot of internet text, formed opinions, and then told you things that sounded right. It had no connection to your actual data. It was guessing — confidently.
+
+This works the opposite way. Think of it like a very fast analyst sitting on top of your database. When you ask a question, it goes directly to your numbers, does the calculation, and shows you exactly how it got the answer. If it doesn't know something, it tells you — it doesn't fill in the blank with a guess.
+
+It's the difference between asking someone who read a book about your business versus asking someone who is looking at your actual spreadsheet right now.
+
+---
+
+## SLIDE 4 — LIVE DEMO
+
+**Title:** Your Data. Your Questions. Right Now.
+
+**Demo Script:**
+
+1. **Open the app.** Point to the four numbers across the top:
+
+   "These are live — pulled from your database right now. Q1 closed at $6 million in bookings. Q2 so far has $518 thousand closed with about $3.7 million still in play. And 5 of your 10 reps are in the danger zone — below 75% coverage."
+
+2. **Click the first example button:** "How is Enterprise tracking against quota?"
+
+3. **When the answer appears, read it aloud:**
+
+   "Enterprise is at high risk — 65% quota coverage. They have $165 thousand closed and $2.2 million in pipeline against a $3.65 million target."
+
+4. **Point to the expandable section underneath:**
+
+   "See this? This shows exactly how the number was calculated from your data — the same way your analyst would do it. Every answer has this. You can always check."
+
+5. **Point to the FLAG section:**
+
+   "And this part is honesty. It's telling you: we're only 32 days into the quarter, so the closed number being low is expected. It's also telling you that this number has already been verified — we excluded deals that were showing up incorrectly in the system. 15 deals worth $1.47 million were removed because they couldn't be real."
+
+6. **Ask one more question:** "Which reps are at risk of missing Q2?"
+
+   "Five reps flagged: Aisha Williams at 63%, Danielle Torres at 65%, Lisa Park at 71%, Priya Patel at 74%, Kevin Marsh at 74%. All below the 75% line."
+
+7. **Close with:**
+
+   "Every answer — same process. Your data. Calculation shown. Caveats flagged."
+
+---
+
+## SLIDE 5 — HONEST LIMITATIONS
+
+**Title:** What This Tool Does Not Do
+
+**Speaker Notes:**
+
+Two things this tool will not do — and I think both are actually good news.
+
+First: it does not predict the future. It will not tell you "you will close $2 million next month." Because any tool that tells you that is guessing. This only tells you what has happened and what is currently in your pipeline. Facts — not forecasts. That means you'll never get called out for a made-up prediction again.
+
+Second: the business rules inside it — like what counts as "at risk" or how we calculate coverage — those need a two-hour session with your analyst to validate before we roll this out to the full team. We built it based on industry standards, but your team may define some things differently. That's a feature, not a bug — it means nothing goes live until your people say the math is right.
+
+---
+
+## SLIDE 6 — NEXT STEPS
+
+**Title:** Three Steps to Make This Live for Your Team
+
+**Speaker Notes:**
+
+Here's what happens next if you want to move forward.
+
+One — a two-hour working session with your data analyst. They validate the business rules and confirm the numbers match what they'd calculate by hand.
+
+Two — we set up access controls so each rep sees their own pipeline and managers see their team. No one sees data they shouldn't.
+
+Three — we connect this to your full CRM so it stays current automatically, not just a quarterly snapshot.
+
+That's it. No six-month project. No committee. Two hours of validation and you could have this live for your team.
+
+---
+
+---
+
+## Q&A PREPARATION
+
+---
+
+### ANSWER 1: "The last AI hallucinated — how does yours avoid that, and where does it still fall short?"
+
+I know this isn't the first time someone has put an AI tool in front of you. And I know the last time didn't go well. A number came out that wasn't real, and you got called out for it. That's a reasonable reason to be skeptical. So I'm not going to ask you to trust this today. I'm going to show you — and you can decide for yourself whether this earns your trust.
+
+The previous tool was generating answers from general knowledge — it had never seen your actual data. It was doing the equivalent of asking someone on the street what your Q2 pipeline looks like. Of course it made things up.
+
+This is fundamentally different. Every single number comes from one place: your database. When you ask a question, it writes a calculation, runs it against your actual data, and shows you the calculation underneath the answer. If you asked your analyst the same question, they'd do the same steps — just slower.
+
+Where it still falls short: if someone asks a question that your data literally cannot answer — like "will we hit quota next quarter?" — it will say "I don't have that information" instead of guessing. Some people find that frustrating. I think it's the honest thing to do. The other thing: the business rules — what counts as "at risk," how we define coverage — those were set up based on industry standards. Your analyst needs to validate them before this goes to your full team. We haven't done that step yet.
+
+---
+
+### ANSWER 2: "What did you cut and why?"
+
+Three deliberate cuts.
+
+First — no predictions. We could have built something that forecasts revenue, but forecasts are exactly where AI tools start making things up. We chose facts only.
+
+Second — we found 15 deals in the data that were impossible. They showed as "closed and won" last quarter but then reappeared as open pipeline this quarter. That can't happen in reality. Rather than include bad data and give you a misleading number, we excluded them — $1.47 million worth — and flagged that exclusion in every answer that involves pipeline.
+
+Third — we didn't connect to the live CRM feed yet. Right now this uses a quarterly snapshot. That was deliberate: we wanted to prove the logic is correct on known data before hooking it up to something that changes every hour. The live connection is step three in the rollout.
+
+---
+
+### ANSWER 3: What the artifact proves and does not prove
+
+This proves that a non-technical person can ask a plain English question about sales pipeline and get a verified, traceable answer in seconds — directly from your data, with the calculation shown and limitations flagged honestly. It proves the system refuses to guess, excludes known bad data, and distinguishes between facts and assumptions.
+
+What it does not yet prove is production-scale reliability under daily use by a full sales team, nor has it been validated against your analyst's specific business rule definitions. It is a working prototype that delivers correct answers on real data — not a finished product ready for unsupervised company-wide deployment.
