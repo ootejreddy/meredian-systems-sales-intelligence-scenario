@@ -36,6 +36,10 @@ with st.sidebar:
     - **Trust:** Every answer grounded in SQL — no hallucination
     - **At-risk threshold:** Quota coverage below 75 percent
     """)
+    st.markdown("---")
+    if st.button("Clear conversation", use_container_width=True):
+        st.session_state.messages = []
+        st.experimental_rerun()
 
 # ------------------------------------------------------------
 # TITLE AND TRUST BANNER
@@ -132,14 +136,31 @@ st.divider()
 # ------------------------------------------------------------
 # HELPER: CALL CORTEX AGENT
 # ------------------------------------------------------------
-def call_agent(question: str) -> dict:
-    """Call the Meridian Sales Agent and return parsed response."""
+def call_agent(question: str, history: list) -> dict:
+    """Call the Meridian Sales Agent with conversation history for multi-turn support."""
     try:
-        request_body = json.dumps({
-            "messages": [
-                {"role": "user", "content": [{"type": "text", "text": question}]}
-            ]
+        # Build messages array from conversation history
+        messages = []
+        # Keep last 10 exchanges (20 messages) to avoid token overflow
+        recent_history = history[-20:]
+        for msg in recent_history:
+            if msg["role"] == "user":
+                messages.append({
+                    "role": "user",
+                    "content": [{"type": "text", "text": msg["content"]}]
+                })
+            elif msg["role"] == "assistant":
+                messages.append({
+                    "role": "assistant",
+                    "content": [{"type": "text", "text": msg["content"]}]
+                })
+        # Add the new question
+        messages.append({
+            "role": "user",
+            "content": [{"type": "text", "text": question}]
         })
+
+        request_body = json.dumps({"messages": messages})
         result = session.sql(
             "SELECT SNOWFLAKE.CORTEX.DATA_AGENT_RUN("
             "'MERIDIAN_SALES.GOLD.MERIDIAN_SALES_AGENT', ?)",
@@ -217,9 +238,9 @@ if question:
     st.session_state.messages.append({"role": "user", "content": question})
     st.markdown(f"**You:** {question}")
 
-    # Call agent
+    # Call agent with conversation history for multi-turn context
     with st.spinner("Analyzing..."):
-        result = call_agent(question)
+        result = call_agent(question, st.session_state.messages[:-1])
 
     if result["error"]:
         st.error("Could not get answer. Please try again.")
